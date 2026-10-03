@@ -24,3 +24,14 @@ export const authenticateUser = async (req, res, next) => {
         })
     }
 }
+
+export const authenticateSeller = (req, res, next) => {
+
+    if (req.user.role !== "seller") {
+        return res.status(403).json({
+            message: "Access Forbidden for user"
+        })
+    }
+
+    next()
+}
