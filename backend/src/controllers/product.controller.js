@@ -40,10 +40,14 @@ export const getProductsForUser = async (req, res) => {
 
     const products = await productModel.find({ published: true });
 
-
+    if (!products) {
+        return res.status(404).json({
+            message: "Products not found"
+        })
+    }
 
     return res.status(200).json({
-        message: products.length ? "Products fetched successfully" : "No products found",
+        message: products.length ? "Products fetched successfully" : "No products added",
         products
     })
 }
@@ -74,4 +78,48 @@ export const publishProduct = async (req, res) => {
             message: error.message
         })
     }
+}
+
+export const unPublishProduct = async (req, res) => {
+    
+    try {
+        
+        const id = req.params.id;
+
+        const updated = await productModel.findByIdAndUpdate(id, {
+            published: false
+        }, { new: true })
+
+        if (!updated) {
+            return res.status(404).json({
+                message: "Product not found"
+            })
+        }
+
+        return res.status(200).json({
+            message: "Product un-published successfully",
+            updated
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message
+        })
+    }
+}
+
+export const getProductsForSeller = async (req, res) => {
+
+    const products = await productModel.find();
+
+    if (!products) {
+        return res.status(404).json({
+            message: "Products not found"
+        })
+    }
+
+    return res.status(200).json({
+        message: products.length ? "Products fetched successfully" : "No products added",
+        products
+    })
 }
