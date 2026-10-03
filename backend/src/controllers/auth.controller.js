@@ -1,6 +1,7 @@
 import userModel from "../models/user.model.js";
 import bcrypt from 'bcryptjs'
 import { generateTokens } from "../utils/generateToken.util.js";
+import { verifyRefreshToken } from "../utils/verifyToken.util.js";
 
 
 export const Register = async (req, res) => {
@@ -62,7 +63,7 @@ export const Login = async (req, res) => {
         
         const { email, password } = req.body;
 
-        const user = await userModel.findOne({ email });
+        const user = await userModel.findOne({ email }).select("+password");
 
         if (!user) {
             return res.status(404).json({
@@ -100,4 +101,65 @@ export const Login = async (req, res) => {
             message: error.message
         })
     }
+}
+
+export const Refresh = async (req, res) => {
+
+    try {
+
+        const token = req.cookies.refreshToken;
+
+        if (!token) {
+
+            return res.status(401).json({
+                message: "Unauthorized action. Token required"
+            })
+        }
+
+        const decoded = verifyRefreshToken(token);
+
+        const user = await userModel.findById(decoded.id).select("+refreshToken");
+
+        const tokenMatch = token === user.refreshToken;
+
+        if (!tokenMatch) {
+
+            user.refreshToken = null;
+            await user.save();
+
+            return res.status(401).json({
+                message: "Unauthorized action. Token Mismatch"
+            })
+        }
+
+        const { accessToken, refreshToken } = generateTokens({ id: user._id, role: user.role });
+
+        res.cookie("refreshToken", refreshToken, { httpOnly: true });
+
+        user.refreshToken = refreshToken;
+
+        await user.save();
+
+        return res.status(200).json({
+            message: "Refresh successfull",
+            user,
+            accessToken
+        })
+        
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message
+        })
+    }
+}
+
+export const getMe = async (req, res) => {
+
+    const id = req.user.id;
+
+    const user = await userModel.findById(id)
+
+    res.status(200).json({
+       user
+   })
 }
