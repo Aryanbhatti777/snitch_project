@@ -35,3 +35,43 @@ export const addProduct = async (req, res) => {
         })
     }
 }
+
+export const getProductsForUser = async (req, res) => {
+
+    const products = await productModel.find({ published: true });
+
+
+
+    return res.status(200).json({
+        message: products.length ? "Products fetched successfully" : "No products found",
+        products
+    })
+}
+
+export const publishProduct = async (req, res) => {
+    
+    try {
+        
+        const id = req.params.id;
+
+        const updated = await productModel.findByIdAndUpdate(id, {
+            published: true
+        }, { new: true })
+
+        if (!updated) {
+            return res.status(404).json({
+                message: "Product not found"
+            })
+        }
+
+        return res.status(200).json({
+            message: "Product published successfully",
+            updated
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message
+        })
+    }
+}

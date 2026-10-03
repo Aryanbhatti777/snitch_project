@@ -1,4 +1,4 @@
-import {body, validationResult} from 'express-validator'
+import {body,param, validationResult} from 'express-validator'
 
 export const addProductValidation = [
     body('title')
@@ -42,6 +42,27 @@ export const addProductValidation = [
         if (!errors.isEmpty()) {
             return res.status(400).json({
                 message: "Invalid request",
+                errors: errors.array()
+            })
+        }
+
+        next()
+    }
+]
+
+export const paramValidationforPublish = [
+
+    param('id')
+        .exists().withMessage("Product id is required in parameters")
+        .isMongoId().withMessage("Invalid mongo id"),
+    
+    (req, res, next) => {
+
+        const errors = validationResult(req)
+
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                message: "Invalid entry",
                 errors: errors.array()
             })
         }
